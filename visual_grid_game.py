@@ -1,8 +1,8 @@
 import random
 import tkinter as tk
 
-# Practical 03:
-# The SearchAgent will be implemented inside agent.py
+# Practical 04:
+# Import the SearchAgent containing BFS, DFS, UCS and A*
 from agent import SearchAgent
 
 
@@ -23,9 +23,9 @@ class VisualGridHuntGame:
         # Agent starts at coordinate (0, 0)
         self.agent_pos = [0, 0]
 
-        # -------------------------------------------------
+        # =================================================
         # WALLS
-        # -------------------------------------------------
+        # =================================================
         if custom_walls is not None:
             self.walls = set(custom_walls)
         else:
@@ -37,9 +37,9 @@ class VisualGridHuntGame:
                 (3, 7),
             }
 
-        # -------------------------------------------------
+        # =================================================
         # FOOD
-        # -------------------------------------------------
+        # =================================================
         self.food_positions = set()
 
         while len(self.food_positions) < num_food:
@@ -54,9 +54,9 @@ class VisualGridHuntGame:
             ):
                 self.food_positions.add(position)
 
-        # -------------------------------------------------
+        # =================================================
         # TOXIC TRAPS
-        # -------------------------------------------------
+        # =================================================
         self.toxic_traps = set()
 
         while len(self.toxic_traps) < 5:
@@ -72,9 +72,9 @@ class VisualGridHuntGame:
             ):
                 self.toxic_traps.add(trap_position)
 
-        # -------------------------------------------------
+        # =================================================
         # OPPONENTS
-        # -------------------------------------------------
+        # =================================================
         self.opponents = []
 
         while len(self.opponents) < num_opponents:
@@ -99,41 +99,50 @@ class VisualGridHuntGame:
         self.collision = False
 
     # =====================================================
-    # PRACTICAL 03 - STEP 1.1
-    # EXPOSE THE WORLD MODEL TO THE AGENT
+    # EXPOSE GLOBAL STATE TO SEARCH AGENT
     # =====================================================
     def get_percept(self) -> dict:
+
         return {
-            # Existing percept information
             "agent_pos": list(self.agent_pos),
+
             "opponent_positions": [
-                list(op) for op in self.opponents
+                list(op)
+                for op in self.opponents
             ],
+
             "smells_food": (
                 tuple(self.agent_pos)
                 in self.food_positions
             ),
+
             "hit_wall": (
                 tuple(self.agent_pos)
                 in self.walls
             ),
+
             "smells_toxin": (
                 tuple(self.agent_pos)
                 in self.toxic_traps
             ),
-            "collision": self.collision,
-            "score": self.score,
-            "remaining_food": len(self.food_positions),
 
-            # -------------------------------------------------
-            # PRACTICAL 03 - NEW GLOBAL STATE INFORMATION
-            # -------------------------------------------------
+            "collision": self.collision,
+
+            "score": self.score,
+
+            "remaining_food": len(
+                self.food_positions
+            ),
+
+            # Required information for search
             "grid_size": (
                 self.width,
                 self.height,
             ),
 
-            "walls": list(self.walls),
+            "walls": list(
+                self.walls
+            ),
 
             "all_food": list(
                 self.food_positions
@@ -141,44 +150,50 @@ class VisualGridHuntGame:
         }
 
     # =====================================================
-    # EXECUTE AN ACTION
+    # EXECUTE ACTION
     # =====================================================
     def execute_action(self, action: str):
 
         self.steps += 1
 
-        new_pos = list(self.agent_pos)
+        new_pos = list(
+            self.agent_pos
+        )
 
-        # -------------------------------------------------
+        # =================================================
         # MOVE AGENT
-        # -------------------------------------------------
+        # =================================================
         if action == "Up":
+
             new_pos[1] = min(
                 self.height - 1,
                 new_pos[1] + 1,
             )
 
         elif action == "Down":
+
             new_pos[1] = max(
                 0,
                 new_pos[1] - 1,
             )
 
         elif action == "Left":
+
             new_pos[0] = max(
                 0,
                 new_pos[0] - 1,
             )
 
         elif action == "Right":
+
             new_pos[0] = min(
                 self.width - 1,
                 new_pos[0] + 1,
             )
 
-        # -------------------------------------------------
+        # =================================================
         # WALL COLLISION
-        # -------------------------------------------------
+        # =================================================
         if tuple(new_pos) in self.walls:
 
             self.score -= 5
@@ -187,12 +202,13 @@ class VisualGridHuntGame:
 
             self.agent_pos = new_pos
 
-        # Updated agent position
-        tuple_pos = tuple(self.agent_pos)
+        tuple_pos = tuple(
+            self.agent_pos
+        )
 
-        # -------------------------------------------------
+        # =================================================
         # FOOD
-        # -------------------------------------------------
+        # =================================================
         if tuple_pos in self.food_positions:
 
             self.food_positions.remove(
@@ -201,16 +217,16 @@ class VisualGridHuntGame:
 
             self.score += 20
 
-        # -------------------------------------------------
+        # =================================================
         # TOXIC TRAP
-        # -------------------------------------------------
+        # =================================================
         if tuple_pos in self.toxic_traps:
 
             self.score -= 15
 
-        # -------------------------------------------------
-        # CHECK COLLISION BEFORE OPPONENT MOVES
-        # -------------------------------------------------
+        # =================================================
+        # CHECK COLLISION
+        # =================================================
         if any(
             op == self.agent_pos
             for op in self.opponents
@@ -218,11 +234,12 @@ class VisualGridHuntGame:
 
             self.score -= 50
             self.collision = True
+
             return
 
-        # -------------------------------------------------
-        # MOVE OPPONENTS RANDOMLY
-        # -------------------------------------------------
+        # =================================================
+        # MOVE OPPONENTS
+        # =================================================
         for op in self.opponents:
 
             move = random.choice(
@@ -265,19 +282,22 @@ class VisualGridHuntGame:
                     opponent_new_pos[0] + 1,
                 )
 
-            # Opponents cannot enter walls
+            # Opponents cannot move through walls
             if (
                 tuple(opponent_new_pos)
                 not in self.walls
             ):
 
-                op[0], op[1] = opponent_new_pos
+                op[0], op[1] = (
+                    opponent_new_pos
+                )
 
-            # Check collision with agent
+            # Collision with agent
             if op == self.agent_pos:
 
                 self.score -= 50
                 self.collision = True
+
                 break
 
     # =====================================================
@@ -297,7 +317,7 @@ class VisualGridHuntGame:
 # =========================================================
 class GridGameGUI:
 
-    """Tkinter interface for the visual grid environment."""
+    """Tkinter GUI for Practical 04 A* Search."""
 
     def __init__(
         self,
@@ -312,12 +332,12 @@ class GridGameGUI:
         self.root = root
 
         self.root.title(
-            "IT3012 - Practical 03 - Uninformed Search"
+            "IT3012 - Practical 04 - A* Informed Search"
         )
 
-        # -------------------------------------------------
+        # =================================================
         # CREATE ENVIRONMENT
-        # -------------------------------------------------
+        # =================================================
         self.env = VisualGridHuntGame(
             width=width,
             height=height,
@@ -326,15 +346,17 @@ class GridGameGUI:
             custom_walls=walls,
         )
 
-        # -------------------------------------------------
-        # PRACTICAL 03
-        # CREATE SEARCH AGENT
-        # -------------------------------------------------
+        # =================================================
+        # PRACTICAL 04 - CREATE A* SEARCH AGENT
+        # =================================================
         self.agent = SearchAgent()
 
-        # -------------------------------------------------
+        # agent.py currently contains:
+        # self.active_algo = 'AStar'
+
+        # =================================================
         # GUI SIZE
-        # -------------------------------------------------
+        # =================================================
         max_canvas_dim = 600
 
         self.cell_size = max(
@@ -355,9 +377,9 @@ class GridGameGUI:
             * self.cell_size
         )
 
-        # -------------------------------------------------
+        # =================================================
         # CANVAS
-        # -------------------------------------------------
+        # =================================================
         self.canvas = tk.Canvas(
             root,
             width=canvas_width,
@@ -367,12 +389,12 @@ class GridGameGUI:
 
         self.canvas.pack()
 
-        # -------------------------------------------------
+        # =================================================
         # INFORMATION LABEL
-        # -------------------------------------------------
+        # =================================================
         self.label = tk.Label(
             root,
-            text="Score: 0 | Steps: 0",
+            text="Algorithm: AStar | Score: 0 | Steps: 0",
             font=("Arial", 14),
         )
 
@@ -380,12 +402,12 @@ class GridGameGUI:
             pady=10
         )
 
-        # -------------------------------------------------
+        # =================================================
         # START BUTTON
-        # -------------------------------------------------
+        # =================================================
         self.button = tk.Button(
             root,
-            text="Start Simulation",
+            text="Start A* Simulation",
             command=self.run_loop,
             font=("Arial", 12),
             bg="#000066",
@@ -403,11 +425,13 @@ class GridGameGUI:
     # =====================================================
     def draw_grid(self):
 
-        self.canvas.delete("all")
+        self.canvas.delete(
+            "all"
+        )
 
-        # -------------------------------------------------
+        # =================================================
         # DRAW CELLS AND WALLS
-        # -------------------------------------------------
+        # =================================================
         for x in range(
             self.env.width
         ):
@@ -439,8 +463,7 @@ class GridGameGUI:
 
                 color = (
                     "#64748b"
-                    if (x, y)
-                    in self.env.walls
+                    if (x, y) in self.env.walls
                     else "#f1f5f9"
                 )
 
@@ -455,21 +478,14 @@ class GridGameGUI:
 
                 if (
                     self.cell_size >= 40
-                    and (x, y)
-                    in self.env.walls
+                    and (x, y) in self.env.walls
                 ):
 
                     self.canvas.create_text(
-                        x1
-                        + self.cell_size / 2,
-
-                        y1
-                        + self.cell_size / 2,
-
+                        x1 + self.cell_size / 2,
+                        y1 + self.cell_size / 2,
                         text="W",
-
                         fill="white",
-
                         font=(
                             "Arial",
                             8,
@@ -477,9 +493,9 @@ class GridGameGUI:
                         ),
                     )
 
-        # -------------------------------------------------
+        # =================================================
         # DRAW FOOD
-        # -------------------------------------------------
+        # =================================================
         for (
             food_x,
             food_y,
@@ -505,19 +521,15 @@ class GridGameGUI:
             self.canvas.create_oval(
                 x1,
                 y1,
-                x1
-                + self.cell_size
-                * 0.5,
-                y1
-                + self.cell_size
-                * 0.5,
+                x1 + self.cell_size * 0.5,
+                y1 + self.cell_size * 0.5,
                 fill="#f59e0b",
                 outline="#d97706",
             )
 
-        # -------------------------------------------------
+        # =================================================
         # DRAW TOXIC TRAPS
-        # -------------------------------------------------
+        # =================================================
         for (
             trap_x,
             trap_y,
@@ -543,19 +555,15 @@ class GridGameGUI:
             self.canvas.create_oval(
                 x1,
                 y1,
-                x1
-                + self.cell_size
-                * 0.6,
-                y1
-                + self.cell_size
-                * 0.6,
+                x1 + self.cell_size * 0.6,
+                y1 + self.cell_size * 0.6,
                 fill="purple",
                 outline="black",
             )
 
-        # -------------------------------------------------
+        # =================================================
         # DRAW OPPONENTS
-        # -------------------------------------------------
+        # =================================================
         for (
             opponent_x,
             opponent_y,
@@ -581,19 +589,15 @@ class GridGameGUI:
             self.canvas.create_rectangle(
                 x1,
                 y1,
-                x1
-                + self.cell_size
-                * 0.6,
-                y1
-                + self.cell_size
-                * 0.6,
+                x1 + self.cell_size * 0.6,
+                y1 + self.cell_size * 0.6,
                 fill="#990000",
                 outline="#7a0000",
             )
 
-        # -------------------------------------------------
+        # =================================================
         # DRAW AGENT
-        # -------------------------------------------------
+        # =================================================
         agent_x, agent_y = (
             self.env.agent_pos
         )
@@ -618,19 +622,14 @@ class GridGameGUI:
         self.canvas.create_oval(
             x1,
             y1,
-            x1
-            + self.cell_size
-            * 0.7,
-            y1
-            + self.cell_size
-            * 0.7,
+            x1 + self.cell_size * 0.7,
+            y1 + self.cell_size * 0.7,
             fill="#000066",
             outline="#1e3a8a",
         )
 
     # =====================================================
-    # PRACTICAL 03
-    # RUN SEARCH AGENT
+    # PRACTICAL 04 - RUN A* SEARCH AGENT
     # =====================================================
     def run_loop(self):
 
@@ -642,29 +641,23 @@ class GridGameGUI:
 
             if not self.env.is_done():
 
-                # -----------------------------------------
-                # GET CURRENT ENVIRONMENT INFORMATION
-                # -----------------------------------------
+                # Get current environment information
                 percept = (
                     self.env.get_percept()
                 )
 
-                # -----------------------------------------
-                # ASK SEARCH AGENT FOR NEXT ACTION
-                # -----------------------------------------
+                # Ask SearchAgent/A* for next action
                 action = (
                     self.agent.sense_and_act(
                         percept
                     )
                 )
 
-                # If no valid action exists
+                # No valid path
                 if action is None:
 
                     self.label.config(
-                        text=(
-                            "No path available."
-                        )
+                        text="No path available."
                     )
 
                     self.button.config(
@@ -673,17 +666,15 @@ class GridGameGUI:
 
                     return
 
-                # -----------------------------------------
-                # EXECUTE SEARCH AGENT ACTION
-                # -----------------------------------------
+                # Execute action
                 self.env.execute_action(
                     action
                 )
 
-                # Redraw grid
+                # Redraw GUI
                 self.draw_grid()
 
-                # Display algorithm and action
+                # Display A* information
                 self.label.config(
                     text=(
                         f"Algorithm: "
